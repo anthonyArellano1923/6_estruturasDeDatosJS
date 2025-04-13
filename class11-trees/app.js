@@ -36,22 +36,18 @@ class BinarySearchTree {
       }
     }
   }
-  delete(value) {
+  search(value, eliminate = 0) {
     let currentNode = this.root
-    if(this.root.value === value) {
-      if(confirm('If you erase this value, all the tree will be eliminated. Continue?')){
-        this.root = null
-        return this
-      } else {
-        return this
-      }
-    }
+    if(currentNode.value === value) return currentNode
     while(true) {
       if(value < currentNode.value) {
-        if(currentNode.left === null) return undefined
+        if(!currentNode.left){
+          console.warn(`${value} not in tree.`)
+          return currentNode
+        } 
         if(currentNode.left.value === value) {
-          currentNode.left = null
-          return this
+          if(eliminate !== 0) return currentNode
+          return currentNode.left
         } else {
           currentNode = currentNode.left
           if(!currentNode){
@@ -60,10 +56,13 @@ class BinarySearchTree {
           }
         }
       } else if(value > currentNode.value) {
-        if(!currentNode.right) return undefined
+        if(!currentNode.right){
+          console.warn(`${value} not in tree.`)
+          return currentNode
+        } 
         if(currentNode.right.value === value) {
-          currentNode.right = null
-          return this
+          if(eliminate !== 0) return currentNode
+          return currentNode.right
         } else {
           currentNode = currentNode.right
           if(!currentNode){
@@ -73,6 +72,27 @@ class BinarySearchTree {
         }
       }
     }
+  }
+  delete(value) {
+    if(this.root.value === value){
+      const eliminate = confirm('Si elimina este valor, se eliminará el árbol entero. ¿Desea continuar?')
+      if(eliminate){
+        this.root = null
+        return this
+      }
+    }
+    const previousNode = this.search(value, 1)
+    if(previousNode.left) {
+      if(previousNode.left.value === value) {
+        previousNode.left = null
+      }
+    }
+    if(previousNode.right) {
+      if(previousNode.right.value === value) {
+        previousNode.right = null
+      }
+    } 
+    return this
   }
   printTree() {
     if (!this.root) {
@@ -139,158 +159,6 @@ class BinarySearchTree {
       // Imprimir línea divisoria si no es el último nivel
       if (i < nodesPerLevel.length - 1) {
         console.log("-".repeat(totalWidth));
-      }
-    }
-  }
-  
-  // Segundo método usando matriz para mejor control del espaciado
-  printTreeMatrix() {
-    if (!this.root) {
-      console.log("Árbol vacío");
-      return;
-    }
-    
-    // Obtener altura del árbol
-    const height = this.getHeight(this.root);
-    
-    // Crear una matriz de caracteres para representar el árbol
-    const charWidth = 3; // Espacio mínimo por valor
-    const cellWidth = Math.max(...this.getAllValues().map(v => String(v).length), charWidth);
-    const matrixWidth = Math.pow(2, height) * (cellWidth + 1) - 1;
-    
-    // Inicializar matriz con espacios
-    const matrix = Array(height).fill().map(() => Array(matrixWidth).fill(' '));
-    
-    // Función para llenar la matriz con los valores del árbol
-    const fillMatrix = (node, level, start, end) => {
-      if (!node) return;
-      
-      // Calcular posición central para este nodo
-      const mid = Math.floor((start + end) / 2);
-      const value = String(node.value);
-      
-      // Colocar valor centrado en la posición calculada
-      const startPos = mid - Math.floor(value.length / 2);
-      for (let i = 0; i < value.length; i++) {
-        matrix[level][startPos + i] = value[i];
-      }
-      
-      // Procesar nodos hijos si existen
-      if (node.left) {
-        fillMatrix(node.left, level + 1, start, mid - 1);
-      }
-      
-      if (node.right) {
-        fillMatrix(node.right, level + 1, mid + 1, end);
-      }
-    };
-    
-    // Comenzar a llenar la matriz desde la raíz
-    fillMatrix(this.root, 0, 0, matrixWidth - 1);
-    
-    // Imprimir la matriz
-    for (let i = 0; i < height; i++) {
-      console.log(matrix[i].join(''));
-      
-      // Imprimir línea divisoria si no es el último nivel
-      if (i < height - 1) {
-        const divider = Array(matrixWidth).fill('-').join('');
-        console.log(divider);
-      }
-    }
-  }
-  
-  // Método BFS mejorado con mejor control de espaciado
-  printTreeBFS() {
-    if (!this.root) {
-      console.log("Árbol vacío");
-      return;
-    }
-    
-    // Obtener altura y todos los valores para calcular el ancho máximo
-    const height = this.getHeight(this.root);
-    const allValues = this.getAllValues();
-    const maxValueLength = Math.max(...allValues.map(v => String(v).length));
-    
-    // Crear array para almacenar nodos por nivel
-    const levels = [];
-    for (let i = 0; i < height; i++) {
-      levels[i] = [];
-    }
-    
-    // Función para llenar los niveles
-    const fillLevels = (node, level) => {
-      if (!node) return;
-      
-      // Agregar este nodo al nivel correspondiente
-      levels[level].push(node);
-      
-      // Procesar hijos
-      fillLevels(node.left, level + 1);
-      fillLevels(node.right, level + 1);
-    };
-    
-    // Llenar niveles comenzando desde la raíz
-    fillLevels(this.root, 0);
-    
-    // Para cada nivel, crear un mapa de posiciones
-    for (let i = 0; i < height; i++) {
-      // Ordenar nodos en este nivel según corresponderían en un árbol completo
-      const sortedLevel = new Array(Math.pow(2, i)).fill(null);
-      
-      // Relleno correcto de huecos para mantener estructura de árbol
-      const assignNodeToPosition = (node, parentIndex, isLeft, level) => {
-        if (!node) return;
-        
-        // Calcular posición en este nivel
-        const position = isLeft ? parentIndex * 2 : parentIndex * 2 + 1;
-        
-        // Asignar nodo a esa posición
-        sortedLevel[position] = node;
-      };
-      
-      // Para el primer nivel, solo hay un nodo (la raíz)
-      if (i === 0) {
-        sortedLevel[0] = this.root;
-      } else {
-        // Para otros niveles, calcular posiciones basadas en los padres
-        for (let j = 0; j < levels[i-1].length; j++) {
-          const parent = levels[i-1][j];
-          // Encontrar la posición del padre en el nivel anterior
-          const parentPos = sortedLevel.findIndex(n => n && n.value === parent.value);
-          
-          // Asignar hijos si existen
-          if (parent.left) {
-            assignNodeToPosition(parent.left, parentPos, true, i);
-          }
-          if (parent.right) {
-            assignNodeToPosition(parent.right, parentPos, false, i);
-          }
-        }
-      }
-      
-      // Calcular espaciado necesario para este nivel
-      const spacing = Math.pow(2, height - i - 1) * (maxValueLength + 1) - 1;
-      
-      // Construir la cadena para este nivel
-      let levelStr = '';
-      
-      // Imprimir nodos con el espaciado correcto
-      for (let j = 0; j < sortedLevel.length; j++) {
-        const node = sortedLevel[j];
-        const value = node ? String(node.value) : ' '.repeat(maxValueLength);
-        const paddedValue = value.padStart(Math.floor((maxValueLength + value.length) / 2)).padEnd(maxValueLength);
-        
-        // Agregar espaciado antes del valor
-        levelStr += ' '.repeat(spacing) + paddedValue + ' '.repeat(spacing);
-      }
-      
-      // Imprimir este nivel
-      console.log(levelStr);
-      
-      // Imprimir línea divisoria si no es el último nivel
-      if (i < height - 1) {
-        console.log('-'.repeat(levelStr.length));
       }
     }
   }
