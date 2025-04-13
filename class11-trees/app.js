@@ -36,6 +36,44 @@ class BinarySearchTree {
       }
     }
   }
+  delete(value) {
+    let currentNode = this.root
+    if(this.root.value === value) {
+      if(confirm('If you erase this value, all the tree will be eliminated. Continue?')){
+        this.root = null
+        return this
+      } else {
+        return this
+      }
+    }
+    while(true) {
+      if(value < currentNode.value) {
+        if(currentNode.left === null) return undefined
+        if(currentNode.left.value === value) {
+          currentNode.left = null
+          return this
+        } else {
+          currentNode = currentNode.left
+          if(!currentNode){
+            console.warn('This value is not in tree.')
+            break
+          }
+        }
+      } else if(value > currentNode.value) {
+        if(!currentNode.right) return undefined
+        if(currentNode.right.value === value) {
+          currentNode.right = null
+          return this
+        } else {
+          currentNode = currentNode.right
+          if(!currentNode){
+            console.warn('This value is not in tree.')
+            break
+          }
+        }
+      }
+    }
+  }
   printTree() {
     if (!this.root) {
       console.log("Árbol vacío");
